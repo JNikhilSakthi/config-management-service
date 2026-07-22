@@ -2,9 +2,9 @@
 
 Externalize environment-specific configuration for a fleet of microservices into one Spring Cloud Config Server, so every service can be built once and reconfigured per environment without a rebuild — and refreshed live without a restart.
 
-![Java](https://img.shields.io/badge/Java-21-orange)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen)
-![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.0.3-brightgreen)
+![Java](https://img.shields.io/badge/Java-25-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-brightgreen)
+![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.1-brightgreen)
 ![Maven](https://img.shields.io/badge/Build-Maven-blue)
 ![Docker](https://img.shields.io/badge/Container-Docker-blue)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
@@ -187,16 +187,16 @@ springboot-config-server-demo/
 
 | Component | Technology | Version | Why |
 |---|---|---|---|
-| Language | Java | 21 | LTS, required baseline for the roadmap |
-| Framework | Spring Boot | 3.3.4 | Base application framework for all 3 modules |
-| Config platform | Spring Cloud Config | 2023.0.3 (`spring-cloud-dependencies` BOM) | Server + client starters |
+| Language | Java | 25 | LTS, required baseline for the roadmap |
+| Framework | Spring Boot | 4.0.6 | Base application framework for all 3 modules |
+| Config platform | Spring Cloud Config | 2025.1.1 (`spring-cloud-dependencies` BOM) | Server + client starters — the Spring Cloud "Oakwood" release train compatible with Spring Boot 4.0.x (2025.0.0 is explicitly incompatible with Boot 4.0.1+) |
 | Build tool | Maven (multi-module) | 3.9.x | Parent POM + 3 modules, `dependency-management` import of the Spring Cloud BOM |
 | Web layer | Spring MVC (`spring-boot-starter-web`) | — | REST controllers on order-service/product-service |
 | Persistence | Spring Data JPA + H2 (in-memory) | — | Simple, dependency-free CRUD stores so the demo needs no external DB — the teaching focus stays on Config Server, not on database ops |
 | Validation | `spring-boot-starter-validation` (Bean Validation / Jakarta) | — | `@NotBlank`, `@Min`, `@DecimalMin` on request DTOs |
 | Observability | `spring-boot-starter-actuator` | — | `/actuator/health`, `/actuator/refresh`, `/actuator/env`, `/actuator/info` |
-| Testing | JUnit 5 + Mockito + Spring `MockMvc` | — | Service-layer unit tests, controller slice tests, context-load smoke tests |
-| Containerization | Docker (multi-stage builds), Docker Compose | — | `maven:3.9.9-eclipse-temurin-21` build stage → `eclipse-temurin:21-jre-alpine` runtime stage |
+| Testing | JUnit 5 + Mockito + Spring `MockMvc` (`spring-boot-starter-webmvc-test`) + `@MockitoBean` | — | Service-layer unit tests, `@WebMvcTest` controller slice tests, context-load smoke tests. Boot 4.0 modularized test autoconfiguration per web stack and removed `@MockBean`/`@SpyBean` in favor of `@MockitoBean`/`@MockitoSpyBean`; a test-scoped `spring-boot-jackson2` dependency keeps the Jackson 2 `ObjectMapper` used by MockMvc tests working alongside the app's Jackson 3 runtime default |
+| Containerization | Docker (multi-stage builds), Docker Compose | — | `maven:3.9.9-eclipse-temurin-25` build stage → `eclipse-temurin:25-jre-alpine` runtime stage |
 
 ---
 
@@ -391,7 +391,7 @@ server:
 ### Prerequisites
 
 - Docker + Docker Compose (Docker Desktop or equivalent)
-- (Optional, for local non-Docker development) JDK 21 and Maven 3.9+
+- (Optional, for local non-Docker development) JDK 25 and Maven 3.9+
 
 ### Run the whole stack with Docker Compose — correct startup order
 
@@ -514,7 +514,7 @@ curl http://localhost:8081/api/orders/config-info
 
 ## 10. Testing
 
-Each service module ships JUnit 5 + Mockito unit tests and Spring `@WebMvcTest` slice tests; `config-server` ships a context-load smoke test. All were verified green on JDK 21.
+Each service module ships JUnit 5 + Mockito unit tests and Spring `@WebMvcTest` slice tests; `config-server` ships a context-load smoke test. All were verified green on JDK 25 (Spring Boot 4.0.6 / Spring Cloud 2025.1.1).
 
 Run every module's tests from the repository root:
 
@@ -546,7 +546,7 @@ What's covered:
 
 `docker-compose.yml` defines 3 services on one bridge network (`config-net`):
 
-1. **`config-server`** — built from `config-server/Dockerfile` (multi-stage: `maven:3.9.9-eclipse-temurin-21` compiles the jar; `eclipse-temurin:21-jre-alpine` runs it). Its `config-repo/` folder is copied into the image alongside the jar so the `native` backend's `file:./config-repo` search-location resolves identically to a local `mvn spring-boot:run`. Exposes a `wget`-based healthcheck against `/actuator/health`.
+1. **`config-server`** — built from `config-server/Dockerfile` (multi-stage: `maven:3.9.9-eclipse-temurin-25` compiles the jar; `eclipse-temurin:25-jre-alpine` runs it). Its `config-repo/` folder is copied into the image alongside the jar so the `native` backend's `file:./config-repo` search-location resolves identically to a local `mvn spring-boot:run`. Exposes a `wget`-based healthcheck against `/actuator/health`.
 2. **`order-service`** / **`product-service`** — each `depends_on: config-server: condition: service_healthy`, so Compose will not even start their containers until config-server's healthcheck passes. Each receives `CONFIG_SERVER_URL=http://config-server:8888` (service-name DNS resolution inside the compose network) and `SPRING_PROFILES_ACTIVE=docker` (selecting the `-docker.yml` overlay from `config-repo/`). Each has its own healthcheck too, so `docker compose ps` gives an at-a-glance readiness view of the whole stack.
 
 Startup order enforced end to end:
