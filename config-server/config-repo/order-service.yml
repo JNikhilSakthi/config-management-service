@@ -1,0 +1,50 @@
+# -----------------------------------------------------------------------------
+# order-service.yml (config-repo)
+# -----------------------------------------------------------------------------
+# Served to any client whose spring.application.name=order-service, for EVERY
+# profile, unless a more specific order-service-<profile>.yml overrides a key
+# (see order-service-docker.yml). This is where order-service's "base" runtime
+# configuration lives — it has been removed from the service's own packaged
+# application.yml entirely; the service only knows how to *find* this file.
+# -----------------------------------------------------------------------------
+
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:orderdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# Business-facing configuration, deliberately centralized here so it can be
+# changed and pushed to a running order-service via POST /actuator/refresh
+# without touching code or rebuilding the JAR.
+app:
+  order:
+    welcome-message: "Order Service is running with configuration fetched from Config Server (profile=default, label=main)."
+    max-quantity-per-order: 10
+    discount-enabled: false
+    discount-percentage: 0
+
+# Where order-service should reach product-service. In the default/local
+# profile both services run on localhost with distinct ports.
+product-service:
+  base-url: http://localhost:8082
+
+logging:
+  level:
+    com.medha.configmanagementservice.orderservice: INFO

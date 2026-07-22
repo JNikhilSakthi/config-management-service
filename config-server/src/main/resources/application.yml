@@ -1,0 +1,37 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        # "native" backend means: read config from the local filesystem/classpath
+        # instead of cloning a remote Git repository. This is the simplest possible
+        # backend to teach the Config Server contract without needing Git plumbing.
+        # search-locations accepts a comma-separated list of Spring resource paths;
+        # here we point at the config-repo/ folder that ships inside this module.
+        native:
+          search-locations: file:./config-repo,classpath:/config-repo
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Config Server itself only needs health/info exposed; the *clients*
+        # are the ones that expose "refresh" so operators can push new config
+        # into a running client without a restart.
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    # Verbose logging of environment repository resolution is invaluable while
+    # learning Config Server: it shows exactly which file(s) were resolved for
+    # a given {application}-{profile} request.
+    org.springframework.cloud.config: DEBUG

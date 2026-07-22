@@ -1,0 +1,16 @@
+# -----------------------------------------------------------------------------
+# product-service-docker.yml (config-repo)
+# -----------------------------------------------------------------------------
+# Overrides applied only when product-service runs with
+# SPRING_PROFILES_ACTIVE=docker.
+# -----------------------------------------------------------------------------
+
+app:
+  product:
+    welcome-message: "Product Service is running with configuration fetched from Config Server (profile=docker, label=main)."
+    low-stock-threshold: 10
+    price-currency: "INR"
+
+logging:
+  level:
+    com.medha.configmanagementservice.productservice: DEBUG

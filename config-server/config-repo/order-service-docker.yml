@@ -1,0 +1,25 @@
+# -----------------------------------------------------------------------------
+# order-service-docker.yml (config-repo)
+# -----------------------------------------------------------------------------
+# Only applied when order-service is started with SPRING_PROFILES_ACTIVE=docker
+# (see docker-compose.yml). Spring Cloud Config merges this on TOP of
+# order-service.yml — only the keys below are overridden; everything else
+# (JPA settings, actuator exposure inherited from application.yml, etc.)
+# still comes from the base file. This is the classic "same code, different
+# environment" story that Config Server exists to solve.
+# -----------------------------------------------------------------------------
+
+app:
+  order:
+    welcome-message: "Order Service is running with configuration fetched from Config Server (profile=docker, label=main)."
+    discount-enabled: true
+    discount-percentage: 5
+
+# Inside the docker-compose network, services address each other by
+# container/service name instead of localhost.
+product-service:
+  base-url: http://product-service:8082
+
+logging:
+  level:
+    com.medha.configmanagementservice.orderservice: DEBUG

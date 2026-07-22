@@ -1,0 +1,36 @@
+# -----------------------------------------------------------------------------
+# application.yml (config-repo)
+# -----------------------------------------------------------------------------
+# In Spring Cloud Config, a file literally named "application.yml" (or
+# "application-<profile>.yml") is special: it is the GLOBAL default shared by
+# EVERY client application that talks to this Config Server, regardless of
+# what spring.application.name each client uses. Client-specific files
+# (order-service.yml, product-service.yml, ...) are layered ON TOP of this one,
+# and client-specific values win on conflict.
+#
+# We use it here to centralize the actuator/logging conventions that every
+# client in this system should share, so we don't repeat them per-service.
+# -----------------------------------------------------------------------------
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # "refresh" is what lets an operator POST /actuator/refresh on a running
+        # client and have it re-pull the latest values from this Config Server
+        # and rebind any @RefreshScope / @ConfigurationProperties beans —
+        # without restarting the JVM.
+        include: health,info,refresh,env
+  endpoint:
+    health:
+      show-details: always
+    env:
+      show-values: always
+
+info:
+  config-source: "Spring Cloud Config Server (native filesystem backend)"
+  config-label: "main"
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:-},%X{traceId:-},%X{spanId:-}]"
