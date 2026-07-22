@@ -53,9 +53,27 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Spring Boot 4.0 modularized test autoconfiguration per web stack: plain
+             spring-boot-starter-test no longer pulls in @WebMvcTest / MockMvc
+             support. spring-boot-starter-webmvc-test brings that (and still
+             transitively brings spring-boot-starter-test itself), so it replaces
+             the old starter-test dependency here since this module's tests use
+             @WebMvcTest against spring-boot-starter-web. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Spring Boot 4.0 defaults to Jackson 3 (JsonMapper) and no longer
+             auto-configures a com.fasterxml.jackson.databind.ObjectMapper bean.
+             Our @WebMvcTest classes @Autowired a Jackson 2 ObjectMapper purely to
+             serialize request DTOs to JSON strings for MockMvc; this deprecated
+             compatibility module restores that bean for tests without touching
+             the app's runtime JSON handling (Spring MVC keeps using Jackson 3). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jackson2</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

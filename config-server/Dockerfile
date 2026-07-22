@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- Build stage -----------------------------------------------------------
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-eclipse-temurin-25 AS build
 WORKDIR /build
 
 # Copy just the POMs first so Maven can resolve/cache dependencies as a
@@ -14,7 +14,7 @@ COPY config-server/src config-server/src
 RUN mvn -q -f config-server/pom.xml package -DskipTests
 
 # ---- Runtime stage ----------------------------------------------------------
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
 # wget is used by the docker-compose healthcheck to poll /actuator/health.
